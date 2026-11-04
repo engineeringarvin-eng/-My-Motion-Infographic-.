@@ -1,1 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Circular Progress</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0f172a;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(circle at 30% 30%, rgba(168, 85, 247, 0.12), transparent 45%),
+      radial-gradient(circle at 70% 70%, rgba(34, 211, 238, 0.12), transparent 45%);
+    pointer-events: none;
+  }
+
+  .chart {
+    position: relative;
+    width: min(80vw, 380px);
+    aspect-ratio: 1;
+    opacity: 0;
+    transform: scale(0.7);
+    animation: fadeScale 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  @keyframes fadeScale {
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+    overflow: visible;
+  }
+
+  .track {
+    fill: none;
+    stroke: rgba(148, 163, 184, 0.12);
+    stroke-width: 14;
+  }
+
+  .bar {
+    fill: none;
+    stroke: url(#neon);
+    stroke-width: 14;
+    stroke-linecap: round;
+    filter: url(#glow);
+  }
+
+  .label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .value {
+    font-size: clamp(3.5rem, 16vw, 6rem);
+    font-weight: 800;
+    letter-spacing: -2px;
+    background: linear-gradient(135deg, #c084fc, #22d3ee);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 0 18px rgba(168, 85, 247, 0.55));
+  }
+
+  .value span { font-size: 0.5em; font-weight: 700; margin-left: 2px; }
+
+  .caption {
+    margin-top: 6px;
+    font-size: 0.85rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+</style>
+</head>
+<body>
+
+<div class="chart">
+  <svg viewBox="0 0 200 200">
+    <defs>
+      <linearGradient id="neon" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#a855f7"/>
+        <stop offset="100%" stop-color="#22d3ee"/>
+      </linearGradient>
+      <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="5" result="blur"/>
+        <feMerge>
+          <feMergeNode in="blur"/>
+          <feMergeNode in="blur"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+    </defs>
+    <circle class="track" cx="100" cy="100" r="85"/>
+    <circle class="bar" id="bar" cx="100" cy="100" r="85"/>
+  </svg>
+  <div class="label">
+    <div class="value"><span id="num" style="font-size:1em;margin:0">0</span><span>%</span></div>
+    <div class="caption">Complete</div>
+  </div>
+</div>
+
+<script>
+  const TARGET = 85;
+  const DURATION = 2400;
+  const DELAY = 500;
+
+  const bar = document.getElementById('bar');
+  const num = document.getElementById('num');
+  const R = 85;
+  const C = 2 * Math.PI * R;
+
+  bar.style.strokeDasharray = C;
+  bar.style.strokeDashoffset = C;
+
+  const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+
+  function animate(start) {
+    function frame(now) {
+      const t = Math.min((now - start) / DURATION, 1);
+      const p = easeOutCubic(t) * TARGET;
+      bar.style.strokeDashoffset = C * (1 - p / 100);
+      num.textContent = Math.round(p);
+      if (t < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  window.addEventListener('load', () => {
+    setTimeout(() => animate(performance.now()), DELAY);
+  });
+</script>
+</body>
+</html>
 
