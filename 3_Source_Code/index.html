@@ -5,179 +5,136 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Circular Progress</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #0f172a;
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    overflow: hidden;
-  }
-
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background:
-      radial-gradient(circle at 30% 30%, rgba(168, 85, 247, 0.12), transparent 45%),
-      radial-gradient(circle at 70% 70%, rgba(34, 211, 238, 0.12), transparent 45%);
-    pointer-events: none;
-  }
-
-  .chart {
-    position: relative;
-    width: min(80vw, 380px);
-    aspect-ratio: 1;
-    opacity: 0;
-    transform: scale(0.7);
-    animation: fadeScale 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  }
-
-  @keyframes fadeScale {
-    to { opacity: 1; transform: scale(1); }
-  }
-
-  svg {
-    width: 100%;
-    height: 100%;
-    transform: rotate(-90deg);
-    overflow: visible;
-  }
-
-  .track {
-    fill: none;
-    stroke: rgba(148, 163, 184, 0.12);
-    stroke-width: 14;
-  }
-
-  .bar {
-    fill: none;
-    stroke: url(#neon);
-    stroke-width: 14;
-    stroke-linecap: round;
-    filter: url(#glow);
-  }
-
-  .label {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
-
-  /* Glow lives on the wrapper so the gradient text can repaint freely */
-  .value-glow {
-    filter: drop-shadow(0 0 18px rgba(168, 85, 247, 0.55));
-  }
-
-  .value {
-    display: inline-flex;
-    align-items: baseline;
-    font-size: clamp(3.5rem, 16vw, 6rem);
-    font-weight: 800;
-    letter-spacing: -2px;
-    font-variant-numeric: tabular-nums;
-    background: linear-gradient(135deg, #c084fc, #22d3ee);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
-  }
-
-  .value .unit {
-    font-size: 0.5em;
-    font-weight: 700;
-    margin-left: 2px;
-  }
-
-  .caption {
-    margin-top: 6px;
-    font-size: 0.85rem;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    color: #64748b;
-  }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #0f172a;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        overflow: hidden;
+    }
+    body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+            radial-gradient(circle at 30% 30%, rgba(168, 85, 247, 0.12), transparent 45%),
+            radial-gradient(circle at 70% 70%, rgba(34, 211, 238, 0.12), transparent 45%);
+        pointer-events: none;
+    }
+    .chart {
+        position: relative;
+        width: min(80vw, 380px);
+        aspect-ratio: 1;
+        opacity: 0;
+        transform: scale(0.7);
+        animation: fadeScale 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    @keyframes fadeScale {
+        to { opacity: 1; transform: scale(1); }
+    }
+    svg {
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+    }
+    .track {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.1);
+        stroke-width: 12;
+    }
+    .progress {
+        fill: none;
+        stroke: url(#gradient);
+        stroke-width: 12;
+        stroke-linecap: round;
+        stroke-dasharray: 1; /* طول مسیر */
+        stroke-dashoffset: 1; /* مقدار اولیه */
+        transition: stroke-dashoffset 2.5s cubic-bezier(0.22, 1, 0.36, 1);
+        filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.6));
+    }
+    .text-container {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+    }
+    .number {
+        font-size: clamp(2.5rem, 8vw, 4rem);
+        font-weight: 700;
+        background: linear-gradient(to right, #a855f7, #22d3ee);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .label {
+        font-size: 0.9rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.5);
+        margin-top: 4px;
+    }
 </style>
 </head>
 <body>
 
 <div class="chart">
-  <svg viewBox="0 0 200 200">
-    <defs>
-      <linearGradient id="neon" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="#a855f7"/>
-        <stop offset="100%" stop-color="#22d3ee"/>
-      </linearGradient>
-      <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-        <feGaussianBlur stdDeviation="5" result="blur"/>
-        <feMerge>
-          <feMergeNode in="blur"/>
-          <feMergeNode in="blur"/>
-          <feMergeNode in="SourceGraphic"/>
-        </feMerge>
-      </filter>
-    </defs>
-    <circle class="track" cx="100" cy="100" r="85"/>
-    <circle class="bar" id="bar" cx="100" cy="100" r="85"/>
-  </svg>
-
-  <div class="label">
-    <div class="value-glow">
-      <div class="value"><span id="num">0</span><span class="unit">%</span></div>
+    <svg viewBox="0 0 100 100">
+        <defs>
+            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#a855f7" />
+                <stop offset="100%" stop-color="#22d3ee" />
+            </linearGradient>
+        </defs>
+        <circle class="track" cx="50" cy="50" r="44" />
+        <circle class="progress" id="progress-circle" cx="50" cy="50" r="44" />
+    </svg>
+    <div class="text-container">
+        <div class="number" id="number-display">0%</div>
+        <div class="label">Complete</div>
     </div>
-    <div class="caption">Complete</div>
-  </div>
 </div>
 
 <script>
-  (function () {
-    var TARGET   = 85;
-    var DURATION = 2400;
-    var DELAY    = 500;
+    const circle = document.getElementById('progress-circle');
+    const numberDisplay = document.getElementById('number-display');
+    
+    // پارامترهای دایره
+    const radius = circle.r.baseVal.value;
+    const circumference = 2 * Math.PI * radius;
+    const targetPercent = 85; // درصد نهایی
 
-    var bar = document.getElementById('bar');
-    var num = document.getElementById('num');
+    // تنظیمات اولیه
+    circle.style.strokeDasharray = circumference;
+    circle.style.strokeDashoffset = circumference;
 
-    var R = 85;
-    var C = 2 * Math.PI * R;
+    // شروع انیمیشن بعد از لود شدن صفحه
+    window.addEventListener('load', () => {
+        // 1. انیمیشن حلقه
+        const offset = circumference - (targetPercent / 100) * circumference;
+        circle.style.strokeDashoffset = offset;
 
-    bar.style.strokeDasharray  = C;
-    bar.style.strokeDashoffset = C;
+        // 2. انیمیشن شمارنده عدد
+        let currentPercent = 0;
+        const duration = 2500; // مدت زمان انیمیشن (میلی‌ثانیه)
+        const stepTime = 10; // هر 10 میلی‌ثانیه یک بار آپدیت شود
+        const steps = duration / stepTime;
+        const increment = targetPercent / steps;
 
-    function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
-
-    var startTime = null;
-
-    function frame(timestamp) {
-      if (startTime === null) startTime = timestamp;
-
-      var t = Math.min((timestamp - startTime) / DURATION, 1);
-      var progress = easeOutCubic(t) * TARGET;
-
-      // Ring and number driven by the same value, in the same frame
-      bar.style.strokeDashoffset = C * (1 - progress / 100);
-      num.textContent = Math.round(progress);
-
-      if (t < 1) {
-        requestAnimationFrame(frame);
-      } else {
-        num.textContent = TARGET;
-      }
-    }
-
-    function start() {
-      setTimeout(function () { requestAnimationFrame(frame); }, DELAY);
-    }
-
-    if (document.readyState === 'complete') start();
-    else window.addEventListener('load', start);
-  })();
+        const counter = setInterval(() => {
+            currentPercent += increment;
+            if (currentPercent >= targetPercent) {
+                currentPercent = targetPercent;
+                clearInterval(counter);
+            }
+            numberDisplay.textContent = Math.round(currentPercent) + '%';
+        }, stepTime);
+    });
 </script>
+
 </body>
 </html>
- 
