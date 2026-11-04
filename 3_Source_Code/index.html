@@ -70,18 +70,30 @@
     justify-content: center;
   }
 
-  .value {
-    font-size: clamp(3.5rem, 16vw, 6rem);
-    font-weight: 800;
-    letter-spacing: -2px;
-    background: linear-gradient(135deg, #c084fc, #22d3ee);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+  /* Glow lives on the wrapper so the gradient text can repaint freely */
+  .value-glow {
     filter: drop-shadow(0 0 18px rgba(168, 85, 247, 0.55));
   }
 
-  .value span { font-size: 0.5em; font-weight: 700; margin-left: 2px; }
+  .value {
+    display: inline-flex;
+    align-items: baseline;
+    font-size: clamp(3.5rem, 16vw, 6rem);
+    font-weight: 800;
+    letter-spacing: -2px;
+    font-variant-numeric: tabular-nums;
+    background: linear-gradient(135deg, #c084fc, #22d3ee);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  .value .unit {
+    font-size: 0.5em;
+    font-weight: 700;
+    margin-left: 2px;
+  }
 
   .caption {
     margin-top: 6px;
@@ -113,42 +125,59 @@
     <circle class="track" cx="100" cy="100" r="85"/>
     <circle class="bar" id="bar" cx="100" cy="100" r="85"/>
   </svg>
+
   <div class="label">
-    <div class="value"><span id="num" style="font-size:1em;margin:0">0</span><span>%</span></div>
+    <div class="value-glow">
+      <div class="value"><span id="num">0</span><span class="unit">%</span></div>
+    </div>
     <div class="caption">Complete</div>
   </div>
 </div>
 
 <script>
-  const TARGET = 85;
-  const DURATION = 2400;
-  const DELAY = 500;
+  (function () {
+    var TARGET   = 85;
+    var DURATION = 2400;
+    var DELAY    = 500;
 
-  const bar = document.getElementById('bar');
-  const num = document.getElementById('num');
-  const R = 85;
-  const C = 2 * Math.PI * R;
+    var bar = document.getElementById('bar');
+    var num = document.getElementById('num');
 
-  bar.style.strokeDasharray = C;
-  bar.style.strokeDashoffset = C;
+    var R = 85;
+    var C = 2 * Math.PI * R;
 
-  const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+    bar.style.strokeDasharray  = C;
+    bar.style.strokeDashoffset = C;
 
-  function animate(start) {
-    function frame(now) {
-      const t = Math.min((now - start) / DURATION, 1);
-      const p = easeOutCubic(t) * TARGET;
-      bar.style.strokeDashoffset = C * (1 - p / 100);
-      num.textContent = Math.round(p);
-      if (t < 1) requestAnimationFrame(frame);
+    function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+    var startTime = null;
+
+    function frame(timestamp) {
+      if (startTime === null) startTime = timestamp;
+
+      var t = Math.min((timestamp - startTime) / DURATION, 1);
+      var progress = easeOutCubic(t) * TARGET;
+
+      // Ring and number driven by the same value, in the same frame
+      bar.style.strokeDashoffset = C * (1 - progress / 100);
+      num.textContent = Math.round(progress);
+
+      if (t < 1) {
+        requestAnimationFrame(frame);
+      } else {
+        num.textContent = TARGET;
+      }
     }
-    requestAnimationFrame(frame);
-  }
 
-  window.addEventListener('load', () => {
-    setTimeout(() => animate(performance.now()), DELAY);
-  });
+    function start() {
+      setTimeout(function () { requestAnimationFrame(frame); }, DELAY);
+    }
+
+    if (document.readyState === 'complete') start();
+    else window.addEventListener('load', start);
+  })();
 </script>
 </body>
 </html>
-
+ 
